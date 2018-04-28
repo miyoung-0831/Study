@@ -46,6 +46,8 @@ public:
 		int GetHealth();
 	UFUNCTION()
 		int GetPower();
+	UFUNCTION()
+	void Fire();
 
 public:
 	UPROPERTY(EditAnyWhere, Category = Behavior)
@@ -56,6 +58,12 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "TeamIndex")
 		uint8 TeamIndex;
+
+	UPROPERTY(EditDefaultsOnly, Category = Projectile)
+		TSubclassOf<class ACRProjectile> ProjectileClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		FVector MuzzleOffset;
 private:
 	UFUNCTION()
 		void OnDie();

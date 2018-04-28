@@ -18,4 +18,5 @@ public:
 
 private:
 	void OnMouseLeftButttonClick();
+	void Fire();
 };

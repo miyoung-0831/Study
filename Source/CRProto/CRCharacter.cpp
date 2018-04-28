@@ -6,6 +6,7 @@
 #include "CRAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "CRProjectile.h"
 
 
 // Sets default values
@@ -29,6 +30,13 @@ ACRCharacter::ACRCharacter()
 
 	static ConstructorHelpers::FObjectFinder<UBehaviorTree> BehaviorTree(TEXT("BehaviorTree'/Game/Blueprints/EnemyBT.EnemyBT'"));
 	BotBehavior = BehaviorTree.Object;
+	
+	static ConstructorHelpers::FObjectFinder<UClass> ProjectileBP(TEXT("Blueprint'/Game/Blueprints/BP_Projectile.BP_Projectile_C'"));
+	ProjectileClass = ProjectileBP.Object;
+
+	MuzzleOffset.X = 100;
+	MuzzleOffset.Y = 0;
+	MuzzleOffset.Z = 0;
 
 	TeamIndex = 0;
 	mHealth = 200;
@@ -121,4 +129,34 @@ bool ACRCharacter::IsDead() const
 int ACRCharacter::GetPower()
 {
 	return mPower;
+}
+void ACRCharacter::Fire()
+{
+	if (ProjectileClass)
+	{
+		FVector loc;
+		FRotator rot;
+
+		GetActorEyesViewPoint(loc, rot);
+
+		// MuzzleOffset 을 카메라 스페이스에서 월드 스페이스로 변환합니다.
+		FVector MuzzleLocation = loc + FTransform(rot).TransformVector(MuzzleOffset);
+		FRotator MuzzleRotation = rot;
+		// 조준을 약간 윗쪽으로 올려줍니다.
+		MuzzleRotation.Pitch += 10.0f;
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = this;
+			SpawnParams.Instigator = Instigator;
+			ACRProjectile* Projectile = World->SpawnActor<ACRProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
+			if (Projectile)
+			{
+				// 발사 방향을 알아냅니다.
+				FVector LaunchDirection = MuzzleRotation.Vector();
+				Projectile->FireInDirection(LaunchDirection);
+			}
+		}
+	}
 }

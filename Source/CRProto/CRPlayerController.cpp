@@ -2,6 +2,7 @@
 
 #include "CRPlayerController.h"
 #include "CRProtoGameMode.h"
+#include "CRCharacter.h"
 
 void ACRPlayerController::SetupInputComponent()
 {
@@ -11,40 +12,37 @@ void ACRPlayerController::SetupInputComponent()
 	//	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("We are using ACRPlayerController SetupInputComponent"));
 	//}
 	InputComponent->BindAction("MouseLeftClicked", IE_Pressed, this, &ACRPlayerController::OnMouseLeftButttonClick);
+	InputComponent->BindAction("Fire", IE_Pressed, this, &ACRPlayerController::Fire);
 }
 
 void ACRPlayerController::OnMouseLeftButttonClick()
 {
-	//if (GEngine)
-	//{
-	//	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("We are using ACRPlayerController OnMouseLeftButttonClick"));
-	//}
-	//UE_LOG(LogClass, Log, TEXT("OnMouseLeftButttonClick"));
+	float LocationX, LocationY;
+	GetMousePosition(LocationX, LocationY);
 
-	//ACRProtoGameMode* GameMode = (GetWorld() != NULL ? (ACRProtoGameMode*) GetWorld()->GetAuthGameMode() : NULL);
+	FVector2D mouseLoc(LocationX, LocationY);
+	FHitResult hitResult;
+	GetHitResultAtScreenPosition(mouseLoc, ECC_WorldStatic, false, hitResult);
+	ACRProtoGameMode* GameMode = (GetWorld() != NULL ? (ACRProtoGameMode*)GetWorld()->GetAuthGameMode() : NULL);
 
-	//if (GameMode != NULL)
-	//{
-	//	FVector mouseLocation, mouseDirection;
-	//	DeprojectMousePositionToWorld(mouseLocation, mouseDirection);
+	if (hitResult.bBlockingHit)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("We are using ACRPlayerController OnMouseLeftButttonClick"));
+		}
+		if (GameMode != NULL)
+		{
+			GameMode->SpawnCharacter(ACRCharacter::StaticClass(), hitResult.ImpactPoint + FVector(0, 0, 120), FRotator(0, 0, 0));
+		}
+	}
+}
 
-	//	mouseLocation.Z = 200;
-	//	UE_LOG(LogClass, Log, TEXT("Deproject :: Mouse Location %f, %f, %f"), mouseLocation.X, mouseDirection.Y, mouseLocation.Z);
-
-	//	if (GEngine)
-	//	{
-	//		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Deproject :: Mouse Location %f, %f, %f"), mouseLocation.X, mouseDirection.Y, mouseLocation.Z));
-	//	}
-
-	//	float LocationX, LocationY;
-	//	GetMousePosition(LocationX, LocationY);
-
-	//	UE_LOG(LogClass, Log, TEXT("GetMousePosition :: Mouse Location %f, %f"), LocationX, LocationY);
-	//	if (GEngine)
-	//	{
-	//		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("GetMousePosition :: Mouse Location %f, %f"), LocationX, LocationY));
-	//	}
-	//	const FVector spawnLoc(LocationX, LocationY, 200);
-	//	GameMode->SpawnCharacter(mouseLocation);
-	//}
+void ACRPlayerController::Fire()
+{
+	for (FConstPawnIterator Iterator = GetWorld()->GetPawnIterator(); Iterator; ++Iterator)
+	{
+		ACRCharacter* CRChar = Cast<ACRCharacter>(Iterator->Get());
+		CRChar->Fire();
+	}
 }
